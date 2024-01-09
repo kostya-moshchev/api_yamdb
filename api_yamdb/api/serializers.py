@@ -1,5 +1,7 @@
 from rest_framework import serializers
-<<<<<<< HEAD
+from rest_framework.relations import SlugRelatedField
+from .models import Category, Genre, Title
+from reviews.models import Comment, Review
 from reviews.models import User
 
 
@@ -8,11 +10,6 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ["id", "username", "email", "first_name", "last_name", "bio", "role"]
         read_only_fields = ["id", "username"]
-=======
-from rest_framework.relations import SlugRelatedField
-
-from .models import Category, Genre, Title
-from reviews.models import Comment, Review
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -72,4 +69,3 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = Comment
         read_only_fields = ('review', )
->>>>>>> 5873e190b3efcdfc8292b9866d5821399f7bc419

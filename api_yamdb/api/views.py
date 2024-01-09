@@ -1,11 +1,23 @@
-<<<<<<< HEAD
+from django.db.models import Avg
+from rest_framework import viewsets
 from django.core.mail import send_mail
-from rest_framework import viewsets, status
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, mixins, filters, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import SAFE_METHODS, IsAdminUser, IsAuthenticated
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.authentication import TokenAuthentication
-from .serializers import UserSerializer
-from reviews.models import User
+
+from .models import Category, Genre, Title, User
+from reviews.models import Review, Title
+from .serializers import (CategorySerializer, GenreSerializer,
+                          TitleSerializer, TitleReadSerializer,
+                          ReviewSerializer, CommentSerializer,
+                          UserSerializer)
+from .permissions import IsAdminUserOrReadOnly, IsOwnerOrReadOnly
+from .filters import TitleFilter
+from .pagination import PagePagination
 from .utils import generate_confirmation_code
 
 
@@ -39,24 +51,6 @@ class UserViewSet(viewsets.ModelViewSet):
                 serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST
             )
-=======
-from django.db.models import Avg
-from rest_framework import viewsets
-from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, mixins, filters
-from rest_framework.permissions import SAFE_METHODS
-from rest_framework.pagination import LimitOffsetPagination
-
-from .models import Category, Genre, Title
-from reviews.models import Review, Title
-from .serializers import (CategorySerializer, GenreSerializer,
-                          TitleSerializer, TitleReadSerializer,
-                          ReviewSerializer, CommentSerializer)
-from .permissions import IsAdminUserOrReadOnly, IsOwnerOrReadOnly
-from .filters import TitleFilter
-from .pagination import PagePagination
-
 
 class CreateListDestroyViewSet(mixins.CreateModelMixin,
                                mixins.ListModelMixin,
@@ -128,4 +122,3 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, review=self.get_review())
->>>>>>> 5873e190b3efcdfc8292b9866d5821399f7bc419

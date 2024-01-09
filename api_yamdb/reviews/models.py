@@ -1,6 +1,10 @@
-<<<<<<< HEAD
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.contrib.auth import get_user_model
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from django.db.models import UniqueConstraint
 
 
 class UserManager(BaseUserManager):
@@ -36,16 +40,6 @@ class User(AbstractBaseUser):
 
     def __str__(self):
         return self.username
-=======
-from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
-from django.contrib.auth import get_user_model
-from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver
-from django.db.models import UniqueConstraint
-
-
-User = get_user_model()
 
 
 class BaseAuthorModel(models.Model):
@@ -136,4 +130,3 @@ class Comment(BaseAuthorModel):
     class Meta:
         verbose_name = "Комментарий"
         verbose_name_plural = "Комментарии"
->>>>>>> 5873e190b3efcdfc8292b9866d5821399f7bc419
