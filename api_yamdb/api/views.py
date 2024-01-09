@@ -1,12 +1,17 @@
 from django.db.models import Avg
+from rest_framework import viewsets
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, mixins, filters
 from rest_framework.permissions import SAFE_METHODS
+from rest_framework.pagination import LimitOffsetPagination
 
 from .models import Category, Genre, Title
+from reviews.models import Review, Title
 from .serializers import (CategorySerializer, GenreSerializer,
-                          TitleSerializer, TitleReadSerializer)
-from .permissions import IsAdminUserOrReadOnly
+                          TitleSerializer, TitleReadSerializer,
+                          ReviewSerializer, CommentSerializer)
+from .permissions import IsAdminUserOrReadOnly, IsOwnerOrReadOnly
 from .filters import TitleFilter
 from .pagination import PagePagination
 
@@ -49,3 +54,35 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.request.method in SAFE_METHODS:
             return TitleReadSerializer
         return TitleSerializer
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = ReviewSerializer
+    pagination_class = LimitOffsetPagination
+    permission_classes = [IsOwnerOrReadOnly]
+
+    def get_title(self):
+        title_id = self.kwargs['title_id']
+        return get_object_or_404(Title, id=title_id)
+
+    def get_queryset(self):
+        return self.get_title().reviews.all()
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user, title=self.get_title())
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    pagination_class = LimitOffsetPagination
+    permission_classes = [IsOwnerOrReadOnly]
+
+    def get_review(self):
+        review_id = self.kwargs['review_id']
+        return get_object_or_404(Review, id=review_id)
+
+    def get_queryset(self):
+        return self.get_review().comments.all()
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user, review=self.get_review())
