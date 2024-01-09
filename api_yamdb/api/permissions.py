@@ -1,6 +1,7 @@
 from rest_framework import permissions
 
 
+
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """
     Пользователь может изменять и удалять свои данные,
@@ -22,3 +23,9 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
             or request.user.is_moderator
             or request.user.is_admin
         )
+
+class IsAdminUserOrReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return super().has_permission(request, view)
