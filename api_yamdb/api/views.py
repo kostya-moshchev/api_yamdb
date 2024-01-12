@@ -41,7 +41,7 @@ class AuthViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         serializer.is_valid(raise_exception=True)
         self.perfom_create(serializer)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
     def perfom_create(self, serializer):
         super().perfom_create(serializer)
         user = User.objects.get(username=self.request.data.get('username'))
@@ -56,7 +56,6 @@ class AuthViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             )
         except ValueError:
             raise ValueError('')
-
 
 
 
@@ -76,7 +75,6 @@ class TokenView(APIView):
         }
 
         return Response(token, status=status.HTTP_200_OK)
-
 
 
 class CreateListDestroyViewSet(mixins.CreateModelMixin,
@@ -122,6 +120,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = [IsOwnerOrReadOnly]
+    http_method_names = ("get", "post", "delete", "patch")
 
     def get_title(self):
         title_id = self.kwargs['title_id']
@@ -137,6 +136,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [IsOwnerOrReadOnly]
+    http_method_names = ("get", "post", "delete", "patch")
 
     def get_review(self):
         review_id = self.kwargs['review_id']
