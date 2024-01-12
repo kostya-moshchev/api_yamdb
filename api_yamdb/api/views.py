@@ -110,6 +110,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     pagination_class = PagePagination
+    http_method_names = ("get", "post", "delete", "patch")
 
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
