@@ -1,7 +1,14 @@
 from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenObtainPairView
 from django.urls import include, path
 
-from .views import ReviewViewSet, CommentViewSet, CategoryViewSet, GenreViewSet, TitleViewSet
+from .views import (
+    UserViewSet, ReviewViewSet, CommentViewSet,
+    CategoryViewSet, GenreViewSet, TitleViewSet,
+    AuthViewSet, TokenView,
+)
+
+app_name = 'api'
 
 v1_router = DefaultRouter()
 
@@ -14,11 +21,14 @@ v1_router.register(
 v1_router.register(
     comments_url, CommentViewSet, basename='comment'
 )
+v1_router.register(r'users', UserViewSet)
 v1_router.register(r'categories', CategoryViewSet)
 v1_router.register(r'genres', GenreViewSet)
 v1_router.register(r'titles', TitleViewSet)
+v1_router.register(r'auth/signup', AuthViewSet, basename='createuser')
 
 urlpatterns = [
-    path('api/v1/', include(v1_router.urls)),
+    path('v1/', include(v1_router.urls)),
+    path('v1/auth/token/', TokenView.as_view()),
+    #path('v1/auth/signup/', AuthViewSet.as_view()),
 ]
-

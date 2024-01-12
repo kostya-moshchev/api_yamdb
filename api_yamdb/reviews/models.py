@@ -1,13 +1,11 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-from django.contrib.auth import get_user_model
+from django.core.validators import MaxLengthValidator
+
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.db.models import UniqueConstraint
-
-
-from django.db import models
 
 
 class Category(models.Model):
@@ -18,6 +16,11 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name = "Категория"
+        verbose_name_plural = "Категории"
+        default_related_name = "categories"
+
 
 class Genre(models.Model):
     """Жанры"""
@@ -27,22 +30,54 @@ class Genre(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name = "Жанр"
+        verbose_name_plural = "Жанры"
+        default_related_name = "genres"
+
 
 class Title(models.Model):
-    """Произведения"""
-    name = models.CharField(max_length=256)
-    year = models.IntegerField()
-    description = models.TextField(blank=True, null=True)
-    genre = models.ManyToManyField(Genre, related_name='titles')
+    """Модель произведения."""
+
+    name = models.CharField(
+        verbose_name="Название",
+        max_length=256,
+        db_index=True,
+    )
+    year = models.PositiveSmallIntegerField(
+        verbose_name="Год создания",
+        db_index=True,
+    )
+    description = models.TextField(
+        verbose_name="Описание",
+        blank=True,
+    )
+    genre = models.ManyToManyField(
+        Genre, through='GenreTitle', related_name='titles', blank=True)
     category = models.ForeignKey(
         Category,
+        verbose_name="Категория",
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        related_name='titles')
+        related_name="titles",
+    )
+
+    class Meta:
+        ordering = ("name",)
+        verbose_name = "Произведение"
+        verbose_name_plural = "Произведения"
 
     def __str__(self):
         return self.name
+
+
+class GenreTitle(models.Model):
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.genre} {self.title}"
 
 
 class UserManager(BaseUserManager):
@@ -61,8 +96,8 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser):
-    username = models.CharField(max_length=150)
-    email = models.EmailField(unique=True)
+    username = models.CharField(max_length=150, validators=[MaxLengthValidator(limit_value=150)],)
+    email = models.EmailField(max_length=254, unique=True, validators=[MaxLengthValidator(limit_value=254)],)
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
     bio = models.TextField(blank=True)
@@ -81,9 +116,9 @@ class User(AbstractBaseUser):
 
 
 class BaseAuthorModel(models.Model):
-    """Абстрактная модель.
-
-    Добавляет к модели автора, текст и дату публикации.
+    """
+    Абстрактная модель.
+    Добавляет к модели автора, текст и дату публикации
     """
     text = models.TextField(
         verbose_name="Текст",
@@ -100,6 +135,7 @@ class BaseAuthorModel(models.Model):
 
 
 class Review(BaseAuthorModel):
+    """Модель отзывов на произведения"""
     author = models.ForeignKey(
         User,
         verbose_name="Автор",
@@ -133,22 +169,23 @@ class Review(BaseAuthorModel):
         ]
 
 
-@receiver(post_save, sender=Review)
-@receiver(post_delete, sender=Review)
-def update_title_rating(instance, **kwargs):
-    title = instance.title
-    reviews = title.reviews.all()
-    total_score = sum(review.score for review in reviews)
-    num_reviews = len(reviews)
-    if num_reviews > 0:
-        title.rating = round(total_score / num_reviews)
-    else:
-        title.rating = None
+# @receiver(post_save, sender=Review)
+# @receiver(post_delete, sender=Review)
+# def update_title_rating(instance, **kwargs):
+#     title = instance.title
+#     reviews = title.reviews.all()
+#     total_score = sum(review.score for review in reviews)
+#     num_reviews = len(reviews)
+#     if num_reviews > 0:
+#         title.rating = round(total_score / num_reviews)
+#     else:
+#         title.rating = None
 
-    title.save()
+#     title.save()
 
 
 class Comment(BaseAuthorModel):
+    """Модель комментариев"""
     author = models.ForeignKey(
         User,
         verbose_name="Автор",

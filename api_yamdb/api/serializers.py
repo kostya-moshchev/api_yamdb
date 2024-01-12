@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
-from .models import Category, Genre, Title
+from django.contrib.auth import authenticate
+from reviews.models import Category, Genre, Title
 from reviews.models import Comment, Review
 from reviews.models import User
 
@@ -8,8 +9,66 @@ from reviews.models import User
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "email", "first_name", "last_name", "bio", "role"]
-        read_only_fields = ["id", "username"]
+        fields = '__all__'
+
+
+class CreateUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email', 'username', 'password']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        user = User(
+            email=validated_data['email'],
+            username=validated_data['username']
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
+
+
+class SignUpSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = '__all__'
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        user = User(
+            email=validated_data['email'],
+            username=validated_data['username']
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
+
+    def validate_email(self, value):
+        # Проверяем, что email не занят другим пользователем
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError('This email is already taken')
+        return value
+
+    def validate_username(self, value):
+        # Проверяем, что username не занят другим пользователем
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError('This username is already taken')
+        return value
+
+
+class TokenSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+    confirmation_code = serializers.CharField(max_length=6)
+
+    def validate(self, data):
+        # проверяем код подтверждения
+        user = authenticate(username=data['username'], confirmation_code=data['confirmation_code'])
+        if not user:
+            raise serializers.ValidationError('Invalid confirmation code')
+
+        data['user'] = user
+        return data
 
 
 class CategorySerializer(serializers.ModelSerializer):

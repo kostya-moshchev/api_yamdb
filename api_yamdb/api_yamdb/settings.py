@@ -22,17 +22,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-<<<<<<< HEAD
     'rest_framework',
+    'django_filters',
     'rest_framework_simplejwt',
     'reviews',
     'api',
-=======
-    'django_filters',
-    'rest_framework',
-    'api',
-    'reviews',
->>>>>>> 5873e190b3efcdfc8292b9866d5821399f7bc419
 ]
 
 MIDDLEWARE = [
@@ -115,13 +109,15 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
-    ],
+    # 'DEFAULT_PERMISSION_CLASSES': [
+    #     'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    # ],
 
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "PAGE_SIZE": 10,
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
