@@ -58,7 +58,6 @@ class AuthViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             raise ValueError('')
 
 
-
 class TokenView(APIView):
     serializer_class = TokenSerializer
 
