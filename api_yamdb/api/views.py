@@ -1,34 +1,53 @@
 from django.db.models import Avg
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from django.conf import settings
-from django.template.loader import render_to_string
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, mixins, filters, status, generics
+from rest_framework import viewsets, mixins, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import SAFE_METHODS
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.authtoken.models import Token
 
 from reviews.models import Review, Title, Category, Genre, User
 from .serializers import (CategorySerializer, GenreSerializer,
                           TitleSerializer, TitleReadSerializer,
                           ReviewSerializer, CommentSerializer,
                           UserSerializer, SignUpSerializer,
-                          TokenSerializer)
-from .permissions import IsAdminUserOrReadOnly, IsOwnerOrReadOnly
+                          TokenSerializer, UserSerializer1)
+from .permissions import (IsAdminUserOrReadOnly, IsOwnerOrReadOnly,
+                          IsAdmin, IsAdminOrReadOnly)
 from .filters import TitleFilter
 from .pagination import PagePagination
 from .utils import generate_confirmation_code
+from rest_framework import permissions
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    http_method_names = ("get", "post", "patch", "delete")
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAdminUserOrReadOnly, ]
+    permission_classes = [IsAdmin, ]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    lookup_field = "username"
+    filterset_fields = ['username']
+    search_fields = ['username']
+
+    @action(
+            detail=False, methods=["get", "patch"],
+            permission_classes=[permissions.IsAuthenticated]
+    )
+    def me(self, request):
+        if request.method == "GET":
+            user = request.user
+            serializer = UserSerializer(user)
+            return Response(serializer.data)
+        elif request.method == "PATCH":
+            user = request.user
+            serializer = UserSerializer1(user, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
 
 
 class AuthViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -46,7 +65,8 @@ class AuthViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         super().perfom_create(serializer)
         user = User.objects.get(username=self.request.data.get('username'))
         try:
-            code = generate_confirmation_code()  # функция генерации кода подтверждения
+            # функция генерации кода подтверждения
+            code = generate_confirmation_code()
             send_mail(
                 'Код подтверждения',
                 f'Ваш код подтверждения: {code}',
@@ -86,7 +106,7 @@ class CreateListDestroyViewSet(mixins.CreateModelMixin,
 class CategoryViewSet(CreateListDestroyViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAdminUserOrReadOnly, ]
+    permission_classes = [IsAdminOrReadOnly, ]
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
@@ -96,7 +116,7 @@ class CategoryViewSet(CreateListDestroyViewSet):
 class GenreViewSet(CreateListDestroyViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = [IsAdminUserOrReadOnly, ]
+    permission_classes = [IsAdminOrReadOnly, ]
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
@@ -105,7 +125,7 @@ class GenreViewSet(CreateListDestroyViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all().annotate(Avg('reviews__score'))
-    permission_classes = [IsAdminUserOrReadOnly, ]
+    permission_classes = [IsAdminOrReadOnly, ]
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     pagination_class = PagePagination

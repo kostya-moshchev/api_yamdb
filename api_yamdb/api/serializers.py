@@ -1,48 +1,95 @@
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
-from django.contrib.auth import authenticate
 from reviews.models import Category, Genre, Title
 from reviews.models import Comment, Review
 from reviews.models import User
+from django.contrib.auth import authenticate
+from rest_framework.serializers import (
+    CharField,
+    EmailField,
+)
 
 
 class UserSerializer(serializers.ModelSerializer):
+    def validate_username(self, value):
+        import re
+        # Проверяем, что значение соответствует регулярному выражению
+        if not re.match(r'^[\w.@+-]+\Z', value):
+            raise serializers.ValidationError('Недопустимые символы в имени пользователя.')
+
+        # Проверяем, что значение не равно "me"
+        if value.lower() == "me":
+            raise serializers.ValidationError('Имя пользователя не может быть "me".')
+
+        return value
+
+    def validate_role(self, value):
+        allowed_roles = ['admin', 'moderator', 'user']
+        if value not in allowed_roles:
+            raise serializers.ValidationError('Недопустимая роль. Роли должны быть одной из: {}'.format(', '.join(allowed_roles)))
+
+        return value
+
     class Meta:
         model = User
-        fields = '__all__'
-
-
-class CreateUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['email', 'username', 'password']
-        extra_kwargs = {'password': {'write_only': True}}
-
-    def create(self, validated_data):
-        user = User(
-            email=validated_data['email'],
-            username=validated_data['username']
+        fields = (
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "bio",
+            "role",
         )
-        user.set_password(validated_data['password'])
-        user.save()
-        return user
+        extra_kwargs = {
+            'password': {'write_only': True},
+        }
+
+
+class UserSerializer1(serializers.ModelSerializer):
+    '''
+    Этот сериализатор только для запроса http://127.0.0.1:8000/api/v1/users/me/
+    Он исключает "role"
+    '''
+    def validate_username(self, value):
+        import re
+        # Проверяем, что значение соответствует регулярному выражению
+        if not re.match(r'^[\w.@+-]+\Z', value):
+            raise serializers.ValidationError('Недопустимые символы в имени пользователя.')
+
+        # Проверяем, что значение не равно "me"
+        if value.lower() == "me":
+            raise serializers.ValidationError('Имя пользователя не может быть "me".')
+
+        return value
+
+    def validate_role(self, value):
+        # Проверяем, что роль существует в допустимых значениях
+        allowed_roles = ['admin', 'moderator', 'user']  # Замените этот список на ваши допустимые роли
+        if value not in allowed_roles:
+            raise serializers.ValidationError('Недопустимая роль. Роли должны быть одной из: {}'.format(', '.join(allowed_roles)))
+
+        return value
+
+    class Meta:
+        model = User
+        fields = (
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "bio",
+            "role",
+        )
+        read_only_fields = ("role",)
 
 
 class SignUpSerializer(serializers.ModelSerializer):
+    username = CharField(max_length=150, required=True,)
+    email = EmailField(max_length=254, required=True,)
 
     class Meta:
         model = User
         fields = '__all__'
-        extra_kwargs = {'password': {'write_only': True}}
-
-    def create(self, validated_data):
-        user = User(
-            email=validated_data['email'],
-            username=validated_data['username']
-        )
-        user.set_password(validated_data['password'])
-        user.save()
-        return user
 
     def validate_email(self, value):
         # Проверяем, что email не занят другим пользователем
@@ -54,12 +101,22 @@ class SignUpSerializer(serializers.ModelSerializer):
         # Проверяем, что username не занят другим пользователем
         if User.objects.filter(username=value).exists():
             raise serializers.ValidationError('This username is already taken')
+
+        import re
+        # Проверяем, что значение соответствует регулярному выражению
+        if not re.match(r'^[\w.@+-]+\Z', value):
+            raise serializers.ValidationError('Недопустимые символы в имени пользователя.')
+
+        # Проверяем, что значение не равно "me"
+        if value.lower() == "me":
+            raise serializers.ValidationError('Имя пользователя не может быть "me".')
+
         return value
 
 
 class TokenSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=150)
-    confirmation_code = serializers.CharField(max_length=6)
+    username = CharField(max_length=150, required=True)
+    confirmation_code = CharField(required=True)
 
     def validate(self, data):
         # проверяем код подтверждения
