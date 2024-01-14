@@ -3,7 +3,6 @@ from rest_framework.relations import SlugRelatedField
 from reviews.models import Category, Genre, Title
 from reviews.models import Comment, Review
 from reviews.models import User
-from django.contrib.auth import authenticate
 from rest_framework.serializers import (
     CharField,
     EmailField,
@@ -15,18 +14,20 @@ class UserSerializer(serializers.ModelSerializer):
         import re
         # Проверяем, что значение соответствует регулярному выражению
         if not re.match(r'^[\w.@+-]+\Z', value):
-            raise serializers.ValidationError('Недопустимые символы в имени пользователя.')
+            raise serializers.ValidationError(
+                'Недопустимые символы в имени пользователя.')
 
         # Проверяем, что значение не равно "me"
         if value.lower() == "me":
-            raise serializers.ValidationError('Имя пользователя не может быть "me".')
+            raise serializers.ValidationError(
+                'Имя пользователя не может быть "me".')
 
         return value
 
     def validate_role(self, value):
         allowed_roles = ['admin', 'moderator', 'user']
         if value not in allowed_roles:
-            raise serializers.ValidationError('Недопустимая роль. Роли должны быть одной из: {}'.format(', '.join(allowed_roles)))
+            raise serializers.ValidationError('Недопустимая роль.')
 
         return value
 
@@ -51,19 +52,23 @@ class UserSerializer1(serializers.ModelSerializer):
         import re
         # Проверяем, что значение соответствует регулярному выражению
         if not re.match(r'^[\w.@+-]+\Z', value):
-            raise serializers.ValidationError('Недопустимые символы в имени пользователя.')
+            raise serializers.ValidationError(
+                'Недопустимые символы в имени пользователя.')
 
         # Проверяем, что значение не равно "me"
         if value.lower() == "me":
-            raise serializers.ValidationError('Имя пользователя не может быть "me".')
+            raise serializers.ValidationError(
+                'Имя пользователя не может быть "me".')
 
         return value
 
     def validate_role(self, value):
         # Проверяем, что роль существует в допустимых значениях
-        allowed_roles = ['admin', 'moderator', 'user']  # Замените этот список на ваши допустимые роли
+        allowed_roles = ['admin', 'moderator', 'user']
         if value not in allowed_roles:
-            raise serializers.ValidationError('Недопустимая роль. Роли должны быть одной из: {}'.format(', '.join(allowed_roles)))
+            raise serializers.ValidationError(
+                'Недопустимая роль.'
+            )
 
         return value
 
@@ -109,11 +114,13 @@ class SignUpSerializer(serializers.ModelSerializer):
         import re
         # Проверяем, что значение соответствует регулярному выражению
         if not re.match(r'^[\w.@+-]+\Z', value):
-            raise serializers.ValidationError('Недопустимые символы в имени пользователя.')
+            raise serializers.ValidationError(
+                'Недопустимые символы в имени пользователя.')
 
         # Проверяем, что значение не равно "me"
         if value.lower() == "me":
-            raise serializers.ValidationError('Имя пользователя не может быть "me".')
+            raise serializers.ValidationError(
+                'Имя пользователя не может быть "me".')
 
         return value
 
@@ -121,7 +128,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 class TokenSerializer(serializers.Serializer):
     username = CharField(max_length=150, required=True)
     confirmation_code = CharField(required=True)
-    
+
     class Meta:
         model = User
         fields = ('username', 'confirmation_code')

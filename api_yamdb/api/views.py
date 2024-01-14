@@ -8,16 +8,15 @@ from rest_framework.response import Response
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth.tokens import default_token_generator
 
-from reviews.models import Review, Title, Category, Genre, User, ActivationCode
+from reviews.models import Review, Title, Category, Genre, User
 from .serializers import (CategorySerializer, GenreSerializer,
                           TitleSerializer, TitleReadSerializer,
                           ReviewSerializer, CommentSerializer,
                           UserSerializer, SignUpSerializer,
                           TokenSerializer, UserSerializer1)
-from .permissions import (IsAdminOrAuthorized, IsOwnerOrReadOnly,
+from .permissions import (IsOwnerOrReadOnly,
                           IsAdmin, IsAdminOrReadOnly)
 from .filters import TitleFilter
 from .pagination import PagePagination
@@ -53,31 +52,13 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class AuthViewSet(APIView):
-    # def mailtest(email, code):
-    #     try:
-    #         send_mail(
-    #             'Код подтверждения',
-    #             f'Ваш код подтверждения: {code}',
-    #             'noreply@yamdb.com',
-    #             [email],
-    #             fail_silently=False,
-    #         )
-    #     except ValueError:
-    #         raise ValueError('Ошибка, при отправке письма на почту')
-
     def post(self, request, *args, **kwargs):
-        print('1')
         serializer = SignUpSerializer(data=request.data)
-        print('1', serializer)
         serializer.is_valid(raise_exception=True)
-        print('1')
         user, _ = User.objects.get_or_create(**serializer.validated_data)
-        print('1')
-        confirmation_code = generate_confirmation_code()  # функция генерации кода подтверждения
+        confirmation_code = generate_confirmation_code()
         user.confirmation_code = confirmation_code
         user.save()
-        # mailtest(user.email, code)
-        print('1')
         send_mail(
                 'Код подтверждения',
                 f'Ваш код подтверждения: {confirmation_code}',
@@ -87,34 +68,6 @@ class AuthViewSet(APIView):
             )
         print('1')
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-# class AuthViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
-    # queryset = User.objects.all
-    # serializer_class = SignUpSerializer
-    # permission_classes = [IsAdminUserOrReadOnly, ]
-
-    # def create(self, request, *args, **kwargs):
-    #     serializer = self.get_serializer(data=request.data)
-    #     serializer.is_valid(raise_exception=True)
-    #     self.perfom_create(serializer)
-    #     return Response(serializer.data, status=status.HTTP_200_OK)
-
-    # def perfom_create(self, serializer):
-    #     super().perfom_create(serializer)
-    #     user = User.objects.get(username=self.request.data.get('username'))
-    #     try:
-    #         # функция генерации кода подтверждения
-    #         code = generate_confirmation_code()
-    #         send_mail(
-    #             'Код подтверждения',
-    #             f'Ваш код подтверждения: {code}',
-    #             'noreply@yamdb.com',
-    #             [user.email],
-    #             fail_silently=False,
-    #         )
-    #     except ValueError:
-    #         raise ValueError('')
 
 
 class TokenView(APIView):
@@ -127,7 +80,8 @@ class TokenView(APIView):
         print(1, serializer)
         serializer.is_valid(raise_exception=True)
         print(1)
-        user = get_object_or_404(User, username=serializer.validated_data['username'])
+        user = get_object_or_404(
+            User, username=serializer.validated_data['username'])
         print(1, user)
         if default_token_generator.check_token(
             user,
@@ -141,7 +95,10 @@ class TokenView(APIView):
             print(1, token)
             return Response(token, status=status.HTTP_200_OK)
         else:
-            return Response('Вы ошиблись в поле toden или username', status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                'Вы ошиблись в поле toden или username',
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class CreateListDestroyViewSet(mixins.CreateModelMixin,
