@@ -1,28 +1,28 @@
-from django.db.models import Avg
 from django.core.mail import send_mail
+from django.contrib.auth.tokens import default_token_generator
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+
 from rest_framework import viewsets, mixins, filters, status
 from rest_framework.decorators import action
+from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.permissions import SAFE_METHODS
 from rest_framework.views import APIView
+from rest_framework import serializers, permissions
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework import serializers
-from django.contrib.auth.tokens import default_token_generator
 
 from reviews.models import Review, Title, Category, Genre, User
-from .serializers import (CategorySerializer, GenreSerializer,
-                          TitleSerializer, TitleReadSerializer,
-                          ReviewSerializer, CommentSerializer,
-                          UserSerializer, SignUpSerializer,
-                          TokenSerializer, UserSerializer1)
-from .permissions import (IsOwnerOrReadOnly,
-                          IsAdmin, IsAdminOrReadOnly)
+from .serializers import (
+    CategorySerializer, GenreSerializer, TitleSerializer,
+    TitleReadSerializer, ReviewSerializer, CommentSerializer,
+    UserSerializer, SignUpSerializer, TokenSerializer,
+    UserSerializer1
+)
+from .permissions import IsOwnerOrReadOnly, IsAdmin, IsAdminOrReadOnly
 from .filters import TitleFilter
 from .pagination import PagePagination
 from .utils import generate_confirmation_code
-from rest_framework import permissions
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -35,10 +35,8 @@ class UserViewSet(viewsets.ModelViewSet):
     filterset_fields = ['username']
     search_fields = ['username']
 
-    @action(
-            detail=False, methods=["get", "patch"],
-            permission_classes=[permissions.IsAuthenticated]
-    )
+    @action(detail=False, methods=["get", "patch"],
+            permission_classes=[permissions.IsAuthenticated])
     def me(self, request):
         if request.method == "GET":
             user = request.user
@@ -61,11 +59,11 @@ class AuthViewSet(APIView):
         user.confirmation_code = confirmation_code
         user.save()
         send_mail(
-                'Код подтверждения',
-                f'Ваш код подтверждения: {confirmation_code}',
-                'noreply@yamdb.com',
-                [user.email],
-                fail_silently=False,
+            'Код подтверждения',
+            f'Ваш код подтверждения: {confirmation_code}',
+            'noreply@yamdb.com',
+            [user.email],
+            fail_silently=False,
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
