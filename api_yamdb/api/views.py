@@ -66,7 +66,7 @@ class AuthViewSet(APIView):
                 'noreply@yamdb.com',
                 [user.email],
                 fail_silently=False,
-            )
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
