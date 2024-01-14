@@ -79,6 +79,7 @@ class GenreTitle(models.Model):
 
 
 class UserManager(BaseUserManager):
+
     def create_user(self, email, username,
                     role, password=None, **extra_fields):
         user = self.model(
@@ -91,12 +92,15 @@ class UserManager(BaseUserManager):
         return user
 
     def create_superuser(
-            self, email, username,
-            role='admin', password=None, **extra_fields):
-        # extra_fields.setdefault('is_staff', True)
-        # extra_fields.setdefault('is_superuser', True)
-        return self.create_user(
-            email, password, username, role, **extra_fields)
+            self, email, username, role, password=None, **extra_fields):
+        user = self.create_user(
+            email=email,
+            username=username,
+            role='admin',
+            **extra_fields,
+        )
+        user.save(using=self._db)
+        return user
 
 
 class User(AbstractBaseUser):

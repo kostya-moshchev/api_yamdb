@@ -8,6 +8,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework import serializers
+
 from django.contrib.auth.tokens import default_token_generator
 
 from reviews.models import Review, Title, Category, Genre, User
@@ -66,7 +68,6 @@ class AuthViewSet(APIView):
                 [user.email],
                 fail_silently=False,
             )
-        print('1')
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -129,7 +130,7 @@ class GenreViewSet(CreateListDestroyViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all().annotate(Avg('reviews__score'))
+    queryset = Title.objects.annotate(Avg('reviews__score'))
     permission_classes = [IsAdminOrReadOnly, ]
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -140,6 +141,9 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.request.method in SAFE_METHODS:
             return TitleReadSerializer
         return TitleSerializer
+
+    def get_queryset(self):
+        return Title.objects.annotate(rating=Avg("reviews__score"))
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -155,7 +159,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user, title=self.get_title())
+        title = self.get_title()
+        existing_review = Review.objects.filter(
+            author=self.request.user, title=title)
+
+        if existing_review.exists():
+            raise serializers.ValidationError(
+                'Вы уже оставили отзыв на это произведение.')
+        else:
+            serializer.save(author=self.request.user, title=title)
 
 
 class CommentViewSet(viewsets.ModelViewSet):

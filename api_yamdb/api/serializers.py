@@ -176,14 +176,6 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only=True, slug_field='username'
     )
 
-    def validate(self, data):
-        author = data.get('author')
-        title = data.get('title')
-
-        if Review.objects.filter(author=author, title=title).exists():
-            raise serializers.ValidationError("This review already exists.")
-        return data
-
     class Meta:
         fields = '__all__'
         model = Review
