@@ -91,16 +91,20 @@ class SignUpSerializer(serializers.ModelSerializer):
             "email",
         )
 
-    def validate_email(self, value):
-        # Проверяем, что email не занят другим пользователем
-        if User.objects.filter(email=value).exists():
+    def validate(self, data):
+        # print(value)
+        username = data.get('username')
+        email = data.get('email')
+        if User.objects.filter(username=username, email=email).exists():
+            return data
+        elif User.objects.filter(email=email).exists():
             raise serializers.ValidationError('This email is already taken')
-        return value
+        elif User.objects.filter(username=username).exists():
+            raise serializers.ValidationError('This username is already taken')
+        else:
+            return data
 
     def validate_username(self, value):
-        # Проверяем, что username не занят другим пользователем
-        if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError('This username is already taken')
 
         import re
         # Проверяем, что значение соответствует регулярному выражению
@@ -117,15 +121,10 @@ class SignUpSerializer(serializers.ModelSerializer):
 class TokenSerializer(serializers.Serializer):
     username = CharField(max_length=150, required=True)
     confirmation_code = CharField(required=True)
-
-    def validate(self, data):
-        # проверяем код подтверждения
-        user = authenticate(username=data['username'], confirmation_code=data['confirmation_code'])
-        if not user:
-            raise serializers.ValidationError('Invalid confirmation code')
-
-        data['user'] = user
-        return data
+    
+    class Meta:
+        model = User
+        fields = ('username', 'confirmation_code')
 
 
 class CategorySerializer(serializers.ModelSerializer):

@@ -5,4 +5,4 @@ def generate_confirmation_code():
     """
     Генерация случайного кода подтверждения из 6 цифр.
     """
-    return ''.join([str(random.randint(0, 9)) for _ in range(6)])
+    return ''.join([str(random.randint(0, 9)) for _ in range(5)])

@@ -79,12 +79,12 @@ class GenreTitle(models.Model):
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, username, password=None, **extra_fields):
+    def create_user(self, email, username, role, password=None, **extra_fields):
         # if not email:
         #     raise ValueError('Email is required')
         # # не заметил разницы, можно убрать
         # # extra_fields.setdefault('role', 'user')
-        user = self.model(email=self.normalize_email(email), username=username, **extra_fields)
+        user = self.model(email=self.normalize_email(email), username=username, role=role, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -94,11 +94,10 @@ class UserManager(BaseUserManager):
         # new_user.save(using=self._db)
         # return new_user
 
-    def create_superuser(self, email, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        # extra_fields.setdefault('role', 'admin')
-        return self.create_user(email, password, **extra_fields)
+    def create_superuser(self, email, username, role='admin', password=None, **extra_fields):
+        #extra_fields.setdefault('is_staff', True)
+        #extra_fields.setdefault('is_superuser', True)
+        return self.create_user(email, password, username, role, **extra_fields)
 
 
 '''# class UserManager(BaseUserManager):

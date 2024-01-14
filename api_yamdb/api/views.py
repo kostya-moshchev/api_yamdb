@@ -8,6 +8,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
+from django.contrib.auth.tokens import default_token_generator
 
 from reviews.models import Review, Title, Category, Genre, User, ActivationCode
 from .serializers import (CategorySerializer, GenreSerializer,
@@ -15,7 +17,7 @@ from .serializers import (CategorySerializer, GenreSerializer,
                           ReviewSerializer, CommentSerializer,
                           UserSerializer, SignUpSerializer,
                           TokenSerializer, UserSerializer1)
-from .permissions import (IsAdminUserOrReadOnly, IsOwnerOrReadOnly,
+from .permissions import (IsAdminOrAuthorized, IsOwnerOrReadOnly,
                           IsAdmin, IsAdminOrReadOnly)
 from .filters import TitleFilter
 from .pagination import PagePagination
@@ -71,12 +73,14 @@ class AuthViewSet(APIView):
         print('1')
         user, _ = User.objects.get_or_create(**serializer.validated_data)
         print('1')
-        code = generate_confirmation_code()  # функция генерации кода подтверждения
+        confirmation_code = generate_confirmation_code()  # функция генерации кода подтверждения
+        user.confirmation_code = confirmation_code
+        user.save()
         # mailtest(user.email, code)
         print('1')
         send_mail(
                 'Код подтверждения',
-                f'Ваш код подтверждения: {code}',
+                f'Ваш код подтверждения: {confirmation_code}',
                 'noreply@yamdb.com',
                 [user.email],
                 fail_silently=False,
@@ -117,20 +121,27 @@ class TokenView(APIView):
     serializer_class = TokenSerializer
 
     def post(self, request):
-        ActivationCode1 = get_object_or_404(User, username=request.user.username)
-        print(1, ActivationCode1)
+
+        print(1, request)
         serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)  
-        if request.data.confirmation_code == ActivationCode1.code:
+        print(1, serializer)
+        serializer.is_valid(raise_exception=True)
+        print(1)
+        user = get_object_or_404(User, username=serializer.validated_data['username'])
+        print(1, user)
+        if default_token_generator.check_token(
+            user,
+            request.data.get('confirmation_code')
+        ):
             refresh = RefreshToken.for_user(request.user)
             token = {
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
             }
-
+            print(1, token)
             return Response(token, status=status.HTTP_200_OK)
         else:
-            return Response('Вы ошиблись в поле toden или username', status=status.HTTP_200_OK)
+            return Response('Вы ошиблись в поле toden или username', status=status.HTTP_400_BAD_REQUEST)
 
 
 class CreateListDestroyViewSet(mixins.CreateModelMixin,
