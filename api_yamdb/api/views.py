@@ -9,7 +9,6 @@ from rest_framework.permissions import SAFE_METHODS
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import serializers
-
 from django.contrib.auth.tokens import default_token_generator
 
 from reviews.models import Review, Title, Category, Genre, User
