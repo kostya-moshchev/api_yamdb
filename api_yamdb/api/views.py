@@ -75,15 +75,10 @@ class TokenView(APIView):
     serializer_class = TokenSerializer
 
     def post(self, request):
-
-        print(1, request)
         serializer = self.serializer_class(data=request.data)
-        print(1, serializer)
         serializer.is_valid(raise_exception=True)
-        print(1)
         user = get_object_or_404(
             User, username=serializer.validated_data['username'])
-        print(1, user)
         if default_token_generator.check_token(
             user,
             request.data.get('confirmation_code')
@@ -93,7 +88,6 @@ class TokenView(APIView):
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
             }
-            print(1, token)
             return Response(token, status=status.HTTP_200_OK)
         else:
             return Response(
