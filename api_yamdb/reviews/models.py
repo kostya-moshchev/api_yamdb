@@ -85,7 +85,7 @@ class UserManager(BaseUserManager):
         # # не заметил разницы, можно убрать
         # # extra_fields.setdefault('role', 'user')
         user = self.model(email=self.normalize_email(email), username=username, **extra_fields)
-        # user.set_password(password)
+        user.set_password(password)
         user.save(using=self._db)
         return user
         # if not email:
@@ -135,7 +135,7 @@ class User(AbstractBaseUser):
 
     objects = UserManager()
 
-    USERNAME_FIELD = 'email'
+    USERNAME_FIELD = 'username'
 
     def __str__(self):
         return self.username

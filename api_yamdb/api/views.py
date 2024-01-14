@@ -117,7 +117,8 @@ class TokenView(APIView):
     serializer_class = TokenSerializer
 
     def post(self, request):
-        ActivationCode1 = get_object_or_404(User, user=request.user.username)
+        ActivationCode1 = get_object_or_404(User, username=request.user.username)
+        print(1, ActivationCode1)
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)  
         if request.data.confirmation_code == ActivationCode1.code:

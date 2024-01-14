@@ -86,7 +86,10 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = '__all__'
+        fields = (
+            "username",
+            "email",
+        )
 
     def validate_email(self, value):
         # Проверяем, что email не занят другим пользователем
@@ -96,8 +99,8 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     def validate_username(self, value):
         # Проверяем, что username не занят другим пользователем
-        # if User.objects.filter(username=value).exists():
-        #     raise serializers.ValidationError('This username is already taken')
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError('This username is already taken')
 
         import re
         # Проверяем, что значение соответствует регулярному выражению
