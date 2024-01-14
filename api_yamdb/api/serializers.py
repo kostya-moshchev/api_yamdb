@@ -97,7 +97,6 @@ class SignUpSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
-        # print(value)
         username = data.get('username')
         email = data.get('email')
         if User.objects.filter(username=username, email=email).exists():
