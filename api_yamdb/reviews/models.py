@@ -94,10 +94,15 @@ class UserManager(BaseUserManager):
         # new_user.save(using=self._db)
         # return new_user
 
-    def create_superuser(self, email, username, role='admin', password=None, **extra_fields):
-        #extra_fields.setdefault('is_staff', True)
-        #extra_fields.setdefault('is_superuser', True)
-        return self.create_user(email, password, username, role, **extra_fields)
+    def create_superuser(self, email, username, role, password=None, **extra_fields):
+        user = self.create_user(
+            email=email,
+            username=username,
+            role='admin',
+            **extra_fields,
+        )
+        user.save(using=self._db)
+        return user
 
 
 '''# class UserManager(BaseUserManager):
@@ -131,7 +136,7 @@ class User(AbstractBaseUser):
         ],
         default="user"
     )
-
+    
     objects = UserManager()
 
     USERNAME_FIELD = 'username'
