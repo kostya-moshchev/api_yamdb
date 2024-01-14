@@ -2,7 +2,7 @@ from django.db.models import Avg
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, mixins, filters, status
+from rest_framework import viewsets, mixins, filters, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import SAFE_METHODS
@@ -21,7 +21,6 @@ from .permissions import (IsOwnerOrReadOnly,
 from .filters import TitleFilter
 from .pagination import PagePagination
 from .utils import generate_confirmation_code
-from rest_framework import permissions
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -35,8 +34,8 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ['username']
 
     @action(
-            detail=False, methods=["get", "patch"],
-            permission_classes=[permissions.IsAuthenticated]
+        detail=False, methods=["get", "patch"],
+        permission_classes=[permissions.IsAuthenticated]
     )
     def me(self, request):
         if request.method == "GET":
@@ -60,12 +59,12 @@ class AuthViewSet(APIView):
         user.confirmation_code = confirmation_code
         user.save()
         send_mail(
-                'Код подтверждения',
-                f'Ваш код подтверждения: {confirmation_code}',
-                'noreply@yamdb.com',
-                [user.email],
-                fail_silently=False,
-            )
+            'Код подтверждения',
+            f'Ваш код подтверждения: {confirmation_code}',
+            'noreply@yamdb.com',
+            [user.email],
+            fail_silently=False,
+        )
         print('1')
         return Response(serializer.data, status=status.HTTP_200_OK)
 

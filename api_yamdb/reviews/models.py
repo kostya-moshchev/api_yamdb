@@ -79,6 +79,7 @@ class GenreTitle(models.Model):
 
 
 class UserManager(BaseUserManager):
+
     def create_user(self, email, username,
                     role, password=None, **extra_fields):
         user = self.model(
@@ -89,13 +90,15 @@ class UserManager(BaseUserManager):
         user.set_password(password)
         user.save(using=self._db)
         return user
-        # if not email:
-        #     raise ValueError('Email is required')
-        # new_user = User(email=self.normalize_email(email), username=username)
-        # new_user.save(using=self._db)
-        # return new_user
 
-    def create_superuser(self, email, username, role, password=None, **extra_fields):
+    def create_superuser(
+            self,
+            email,
+            username,
+            role,
+            password=None,
+            **extra_fields
+    ):
         user = self.create_user(
             email=email,
             username=username,
@@ -104,22 +107,6 @@ class UserManager(BaseUserManager):
         )
         user.save(using=self._db)
         return user
-
-
-'''# class UserManager(BaseUserManager):
-#     def create_user(self, email, **extra_fields):
-#         if not email:
-#             raise ValueError('Email is required')
-#         email = self.normalize_email(email)
-#         user = self.model(email=email, **extra_fields)
-#         # user.set_password(password)
-#         user.save(using=self._db)
-#         return user
-
-#     def create_superuser(self, email, password=None, **extra_fields):
-#         extra_fields.setdefault('is_staff', True)
-#         extra_fields.setdefault('is_superuser', True)
-#         return self.create_user(email, **extra_fields)'''
 
 
 class User(AbstractBaseUser):
@@ -137,7 +124,7 @@ class User(AbstractBaseUser):
         ],
         default="user"
     )
-    
+
     objects = UserManager()
 
     USERNAME_FIELD = 'username'

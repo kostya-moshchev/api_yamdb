@@ -41,6 +41,7 @@ class UserSerializer(serializers.ModelSerializer):
             "bio",
             "role",
         )
+        read_only_fields = ("role",)
 
 
 class UserSerializer1(serializers.ModelSerializer):

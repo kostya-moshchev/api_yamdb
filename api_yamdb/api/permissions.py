@@ -66,19 +66,3 @@ class IsAdminOrReadOnly(permissions.BasePermission):
         # Если нужно применять разрешения к конкретному объекту
         # Может быть использовано в случае с detail-действиями
         return self.has_permission(request, view)
-
-
-class IsAdminOrAuthorized(permissions.BasePermission):
-    def has_permission(self, request, view):
-        # Разрешение для безопасных методов (GET, HEAD, OPTIONS)
-        if request.method in permissions.SAFE_METHODS:
-            return True
-
-        # Для POST и DELETE разрешено только администраторам
-        return (request.superuser.role == 'admin'
-                or request.user.role == 'admin')
-
-    def has_object_permission(self, request, view, obj):
-        # Если нужно применять разрешения к конкретному объекту
-        # Может быть использовано в случае с detail-действиями
-        return self.has_permission(request, view)
