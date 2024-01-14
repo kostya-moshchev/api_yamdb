@@ -9,7 +9,7 @@ from rest_framework.permissions import SAFE_METHODS
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from reviews.models import Review, Title, Category, Genre, User
+from reviews.models import Review, Title, Category, Genre, User, ActivationCode
 from .serializers import (CategorySerializer, GenreSerializer,
                           TitleSerializer, TitleReadSerializer,
                           ReviewSerializer, CommentSerializer,
@@ -50,50 +50,86 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
 
 
-class AuthViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
-    queryset = User.objects.all
-    serializer_class = SignUpSerializer
-    permission_classes = [IsAdminUserOrReadOnly, ]
+class AuthViewSet(APIView):
+    # def mailtest(email, code):
+    #     try:
+    #         send_mail(
+    #             'Код подтверждения',
+    #             f'Ваш код подтверждения: {code}',
+    #             'noreply@yamdb.com',
+    #             [email],
+    #             fail_silently=False,
+    #         )
+    #     except ValueError:
+    #         raise ValueError('Ошибка, при отправке письма на почту')
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+    def post(self, request, *args, **kwargs):
+        print('1')
+        serializer = SignUpSerializer(data=request.data)
+        print('1', serializer)
         serializer.is_valid(raise_exception=True)
-        self.perfom_create(serializer)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def perfom_create(self, serializer):
-        super().perfom_create(serializer)
-        user = User.objects.get(username=self.request.data.get('username'))
-        try:
-            # функция генерации кода подтверждения
-            code = generate_confirmation_code()
-            send_mail(
+        print('1')
+        user, _ = User.objects.get_or_create(**serializer.validated_data)
+        print('1')
+        code = generate_confirmation_code()  # функция генерации кода подтверждения
+        # mailtest(user.email, code)
+        print('1')
+        send_mail(
                 'Код подтверждения',
                 f'Ваш код подтверждения: {code}',
                 'noreply@yamdb.com',
                 [user.email],
                 fail_silently=False,
             )
-        except ValueError:
-            raise ValueError('')
+        print('1')
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# class AuthViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    # queryset = User.objects.all
+    # serializer_class = SignUpSerializer
+    # permission_classes = [IsAdminUserOrReadOnly, ]
+
+    # def create(self, request, *args, **kwargs):
+    #     serializer = self.get_serializer(data=request.data)
+    #     serializer.is_valid(raise_exception=True)
+    #     self.perfom_create(serializer)
+    #     return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # def perfom_create(self, serializer):
+    #     super().perfom_create(serializer)
+    #     user = User.objects.get(username=self.request.data.get('username'))
+    #     try:
+    #         # функция генерации кода подтверждения
+    #         code = generate_confirmation_code()
+    #         send_mail(
+    #             'Код подтверждения',
+    #             f'Ваш код подтверждения: {code}',
+    #             'noreply@yamdb.com',
+    #             [user.email],
+    #             fail_silently=False,
+    #         )
+    #     except ValueError:
+    #         raise ValueError('')
 
 
 class TokenView(APIView):
     serializer_class = TokenSerializer
 
     def post(self, request):
+        ActivationCode1 = get_object_or_404(User, user=request.user.username)
         serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
+        serializer.is_valid(raise_exception=True)  
+        if request.data.confirmation_code == ActivationCode1.code:
+            refresh = RefreshToken.for_user(request.user)
+            token = {
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+            }
 
-        # Generate JWT token for user
-        refresh = RefreshToken.for_user(user)
-        token = {
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        }
-
-        return Response(token, status=status.HTTP_200_OK)
+            return Response(token, status=status.HTTP_200_OK)
+        else:
+            return Response('Вы ошиблись в поле toden или username', status=status.HTTP_200_OK)
 
 
 class CreateListDestroyViewSet(mixins.CreateModelMixin,

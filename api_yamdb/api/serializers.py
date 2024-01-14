@@ -40,9 +40,6 @@ class UserSerializer(serializers.ModelSerializer):
             "bio",
             "role",
         )
-        extra_kwargs = {
-            'password': {'write_only': True},
-        }
 
 
 class UserSerializer1(serializers.ModelSerializer):
@@ -99,8 +96,8 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     def validate_username(self, value):
         # Проверяем, что username не занят другим пользователем
-        if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError('This username is already taken')
+        # if User.objects.filter(username=value).exists():
+        #     raise serializers.ValidationError('This username is already taken')
 
         import re
         # Проверяем, что значение соответствует регулярному выражению
@@ -169,6 +166,14 @@ class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )
+
+    def validate(self, data):
+        author = data.get('author')
+        title = data.get('title')
+
+        if Review.objects.filter(author=author, title=title).exists():
+            raise serializers.ValidationError("This review already exists.")
+        return data
 
     class Meta:
         fields = '__all__'

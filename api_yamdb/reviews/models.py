@@ -79,28 +79,49 @@ class GenreTitle(models.Model):
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
-        if not email:
-            raise ValueError('Email is required')
-        # не заметил разницы, можно убрать
-        extra_fields.setdefault('role', 'user')
-        user = self.model(email=self.normalize_email(email), **extra_fields)
-        user.set_password(password)
+    def create_user(self, email, username, password=None, **extra_fields):
+        # if not email:
+        #     raise ValueError('Email is required')
+        # # не заметил разницы, можно убрать
+        # # extra_fields.setdefault('role', 'user')
+        user = self.model(email=self.normalize_email(email), username=username, **extra_fields)
+        # user.set_password(password)
         user.save(using=self._db)
         return user
+        # if not email:
+        #     raise ValueError('Email is required')
+        # new_user = User(email=self.normalize_email(email), username=username)
+        # new_user.save(using=self._db)
+        # return new_user
 
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('role', 'admin')
+        # extra_fields.setdefault('role', 'admin')
         return self.create_user(email, password, **extra_fields)
+
+
+'''# class UserManager(BaseUserManager):
+#     def create_user(self, email, **extra_fields):
+#         if not email:
+#             raise ValueError('Email is required')
+#         email = self.normalize_email(email)
+#         user = self.model(email=email, **extra_fields)
+#         # user.set_password(password)
+#         user.save(using=self._db)
+#         return user
+
+#     def create_superuser(self, email, password=None, **extra_fields):
+#         extra_fields.setdefault('is_staff', True)
+#         extra_fields.setdefault('is_superuser', True)
+#         return self.create_user(email, **extra_fields)'''
 
 
 class User(AbstractBaseUser):
     username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(max_length=254, unique=True)
-    first_name = models.CharField(max_length=150)
-    last_name = models.CharField(max_length=150)
+    first_name = models.CharField(max_length=150, blank=True)
+    last_name = models.CharField(max_length=150, blank=True)
     bio = models.TextField(blank=True)
     role = models.CharField(
         max_length=10,
@@ -121,6 +142,53 @@ class User(AbstractBaseUser):
 
     class Meta:
         ordering = ("username",)
+
+
+# class UserManager(BaseUserManager):
+#     def create_user(self, email, username):
+#         if not email:
+#             raise ValueError('Email is required')
+#         # extra_fields.setdefault('role', 'user')
+#         user = self.model(email=self.normalize_email(email), username=username)
+#         user.save(using=self._db)
+#         return user
+
+#     def create_superuser(self, email, **extra_fields):
+#         extra_fields.setdefault('is_staff', True)
+#         extra_fields.setdefault('is_superuser', True)
+#         return self.create_user(email, **extra_fields)
+
+
+# class User(AbstractBaseUser):
+#     username = models.CharField(max_length=150, unique=True)
+#     email = models.EmailField(max_length=254, unique=True)
+#     first_name = models.CharField(max_length=150, blank=True)
+#     last_name = models.CharField(max_length=150, blank=True)
+#     bio = models.TextField(blank=True)
+#     role = models.CharField(
+#         max_length=10,
+#         choices=[
+#             ("user", "User"),
+#             ("moderator", "Moderator"),
+#             ("admin", "Admin")
+#         ],
+#         default="user"
+#     )
+
+#     objects = UserManager()
+
+#     USERNAME_FIELD = 'email'
+
+#     def __str__(self):
+#         return self.username
+
+#     class Meta:
+#         ordering = ("username",)
+
+
+class ActivationCode(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    code = models.CharField(max_length=6)
 
 
 class BaseAuthorModel(models.Model):

@@ -24,10 +24,10 @@ v1_router.register(r'users', UserViewSet)
 v1_router.register(r'categories', CategoryViewSet)
 v1_router.register(r'genres', GenreViewSet)
 v1_router.register(r'titles', TitleViewSet)
-v1_router.register(r'auth/signup', AuthViewSet, basename='createuser')
+# v1_router.register(r'auth/signup', AuthViewSet, basename='createuser')
 
 urlpatterns = [
     path('v1/', include(v1_router.urls)),
     path('v1/auth/token/', TokenView.as_view()),
-    # path('v1/auth/signup/', AuthViewSet.as_view()),
+    path('v1/auth/signup/', AuthViewSet.as_view()),
 ]
