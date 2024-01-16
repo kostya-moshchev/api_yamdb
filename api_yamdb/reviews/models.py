@@ -1,8 +1,6 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver
 from django.db.models import UniqueConstraint
 
 
@@ -130,11 +128,6 @@ class User(AbstractBaseUser):
         ordering = ("username",)
 
 
-class ActivationCode(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    code = models.CharField(max_length=6)
-
-
 class BaseAuthorModel(models.Model):
     """
     Абстрактная модель.
@@ -175,9 +168,6 @@ class Review(BaseAuthorModel):
         ]
     )
 
-    def __str__(self):
-        return self.text[:20]
-
     class Meta(BaseAuthorModel.Meta):
         verbose_name = "Отзыв"
         verbose_name_plural = "Отзывы"
@@ -187,6 +177,9 @@ class Review(BaseAuthorModel):
                 name='unique_review_per_user_title'
             )
         ]
+
+    def __str__(self):
+        return self.text[:20]
 
 
 class Comment(BaseAuthorModel):
@@ -204,9 +197,9 @@ class Comment(BaseAuthorModel):
         related_name='comments'
     )
 
-    def __str__(self):
-        return self.text[:20]
-
-    class Meta:
+    class Meta(BaseAuthorModel.Meta):
         verbose_name = "Комментарий"
         verbose_name_plural = "Комментарии"
+
+    def __str__(self):
+        return self.text[:20]
