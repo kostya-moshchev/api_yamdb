@@ -1,8 +1,6 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver
 from django.db.models import UniqueConstraint
 
 
@@ -130,11 +128,6 @@ class User(AbstractBaseUser):
         ordering = ("username",)
 
 
-class ActivationCode(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    code = models.CharField(max_length=6)
-
-
 class BaseAuthorModel(models.Model):
     """
     Абстрактная модель.
@@ -168,17 +161,14 @@ class Review(BaseAuthorModel):
         on_delete=models.CASCADE,
         related_name='reviews'
     )
-    score = models.IntegerField(
+    score = models.PositiveSmallIntegerField(
         validators=[
             MinValueValidator(1, message="Нельзя поствить оценку ниже 1."),
             MaxValueValidator(10, message="Нельзя поставить оценку выше 10."),
         ]
     )
 
-    def __str__(self):
-        return self.text[:20]
-
-    class Meta:
+    class Meta(BaseAuthorModel.Meta):
         verbose_name = "Отзыв"
         verbose_name_plural = "Отзывы"
         constraints = [
@@ -188,20 +178,8 @@ class Review(BaseAuthorModel):
             )
         ]
 
-
-@receiver(post_save, sender=Review)
-@receiver(post_delete, sender=Review)
-def update_title_rating(instance, **kwargs):
-    title = instance.title
-    reviews = title.reviews.all()
-    total_score = sum(review.score for review in reviews)
-    num_reviews = len(reviews)
-    if num_reviews > 0:
-        title.rating = round(total_score / num_reviews)
-    else:
-        title.rating = None
-
-    title.save()
+    def __str__(self):
+        return self.text[:20]
 
 
 class Comment(BaseAuthorModel):
@@ -219,9 +197,9 @@ class Comment(BaseAuthorModel):
         related_name='comments'
     )
 
-    def __str__(self):
-        return self.text[:20]
-
-    class Meta:
+    class Meta(BaseAuthorModel.Meta):
         verbose_name = "Комментарий"
         verbose_name_plural = "Комментарии"
+
+    def __str__(self):
+        return self.text[:20]
