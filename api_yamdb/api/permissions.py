@@ -1,19 +1,6 @@
 from rest_framework import permissions
 
 
-class AuthorOrReadOnly(permissions.BasePermission):
-
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return obj.author == request.user
-
-
-class ReadOnly(permissions.BasePermission):
-    def has_object_permission(sel, request, view, obj):
-        return request.method in permissions.SAFE_METHODS
-
-
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """
     Пользователь может изменять и удалять свои данные,
@@ -21,10 +8,9 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
     могут редактировать любые данные.
     """
     def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
+        if request.method in permissions.SAFE_METHODS or (
+           request.user.is_authenticated):
             return True
-
-        return request.user.is_authenticated
 
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
@@ -32,13 +18,6 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 
         return (request.user == obj.author or request.user.role == 'moderator'
                 or request.user.role == 'admin')
-
-
-class IsAdminUserOrReadOnly(permissions.BasePermission):
-    def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return super().has_permission(request, view)
 
 
 class IsAdmin(permissions.BasePermission):

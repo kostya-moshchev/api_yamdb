@@ -1,3 +1,4 @@
+import re
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from reviews.models import Category, Genre, Title
@@ -11,7 +12,6 @@ from rest_framework.serializers import (
 
 class UserSerializer(serializers.ModelSerializer):
     def validate_username(self, value):
-        import re
         # Проверяем, что значение соответствует регулярному выражению
         if not re.match(r'^[\w.@+-]+\Z', value):
             raise serializers.ValidationError(
@@ -133,17 +133,21 @@ class TokenSerializer(serializers.Serializer):
         fields = ('username', 'confirmation_code')
 
 
-class CategorySerializer(serializers.ModelSerializer):
+class BasicSerializer(serializers.ModelSerializer):
 
     class Meta:
         exclude = ('id',)
+
+
+class CategorySerializer(BasicSerializer):
+
+    class Meta(BasicSerializer.Meta):
         model = Category
 
 
-class GenreSerializer(serializers.ModelSerializer):
+class GenreSerializer(BasicSerializer):
 
-    class Meta:
-        exclude = ('id',)
+    class Meta(BasicSerializer.Meta):
         model = Genre
 
 
@@ -168,6 +172,10 @@ class TitleSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Title
+
+    def to_representation(self, instance):
+        serializer = TitleReadSerializer(instance)
+        return serializer.data
 
 
 class ReviewSerializer(serializers.ModelSerializer):
