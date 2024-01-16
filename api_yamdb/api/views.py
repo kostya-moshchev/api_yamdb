@@ -157,8 +157,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         if existing_review.exists():
             raise serializers.ValidationError(
                 'Вы уже оставили отзыв на это произведение.')
-        else:
-            serializer.save(author=self.request.user, title=title)
+        serializer.save(author=self.request.user, title=title)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
