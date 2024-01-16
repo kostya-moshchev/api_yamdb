@@ -178,7 +178,7 @@ class Review(BaseAuthorModel):
     def __str__(self):
         return self.text[:20]
 
-    class Meta:
+    class Meta(BaseAuthorModel.Meta):
         verbose_name = "Отзыв"
         verbose_name_plural = "Отзывы"
         constraints = [
