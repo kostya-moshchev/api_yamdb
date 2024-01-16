@@ -168,7 +168,7 @@ class Review(BaseAuthorModel):
         on_delete=models.CASCADE,
         related_name='reviews'
     )
-    score = models.IntegerField(
+    score = models.PositiveSmallIntegerField(
         validators=[
             MinValueValidator(1, message="Нельзя поствить оценку ниже 1."),
             MaxValueValidator(10, message="Нельзя поставить оценку выше 10."),
@@ -187,21 +187,6 @@ class Review(BaseAuthorModel):
                 name='unique_review_per_user_title'
             )
         ]
-
-
-@receiver(post_save, sender=Review)
-@receiver(post_delete, sender=Review)
-def update_title_rating(instance, **kwargs):
-    title = instance.title
-    reviews = title.reviews.all()
-    total_score = sum(review.score for review in reviews)
-    num_reviews = len(reviews)
-    if num_reviews > 0:
-        title.rating = round(total_score / num_reviews)
-    else:
-        title.rating = None
-
-    title.save()
 
 
 class Comment(BaseAuthorModel):
