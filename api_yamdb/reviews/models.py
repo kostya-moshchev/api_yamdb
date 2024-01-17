@@ -3,7 +3,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models import UniqueConstraint
 from django.utils import timezone
-from rest_framework.exceptions import ValidationError
+from django.core.exceptions import ValidationError
 from api_yamdb.constants import (NAME_LENGTH, SLUG_LENGTH, LENGHT_FOR_USER,
                                  EMAIL_LENGTH, ROLE_LENGTH,
                                  MIN_SCORE, MAX_SCORE, COUNT)
@@ -88,9 +88,11 @@ class GenreTitle(models.Model):
         return f"{self.genre} {self.title}"
 
 
-
 class User(AbstractUser):
+    username = models.CharField(max_length=LENGHT_FOR_USER, unique=True)
     email = models.EmailField(max_length=EMAIL_LENGTH, unique=True)
+    first_name = models.CharField(max_length=LENGHT_FOR_USER, blank=True)
+    last_name = models.CharField(max_length=LENGHT_FOR_USER, blank=True)
     bio = models.TextField(blank=True)
     role = models.CharField(
         max_length=ROLE_LENGTH,
