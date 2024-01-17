@@ -9,6 +9,11 @@ from .views import (
 
 app_name = 'api'
 
+auth_urls = [
+    path('token/', TokenView.as_view()),
+    path('signup/', AuthViewSet.as_view()),
+]
+
 v1_router = DefaultRouter()
 
 reviews_url = r"titles/(?P<title_id>\d+)/reviews"
@@ -26,6 +31,5 @@ v1_router.register(r'genres', GenreViewSet)
 v1_router.register(r'titles', TitleViewSet)
 urlpatterns = [
     path('v1/', include(v1_router.urls)),
-    path('v1/auth/token/', TokenView.as_view()),
-    path('v1/auth/signup/', AuthViewSet.as_view()),
+    path('v1/auth/', include(auth_urls)),
 ]
