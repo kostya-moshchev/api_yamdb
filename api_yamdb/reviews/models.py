@@ -3,10 +3,10 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models import UniqueConstraint
 from django.utils import timezone
-
+from rest_framework.exceptions import ValidationError
 from api_yamdb.constants import (NAME_LENGTH, SLUG_LENGTH, LENGHT_FOR_USER,
-                                 EMAIL_LENGTH, ROLE_LENGTH, CODE_LENGTH,
-                                 MIN_SCORE, MAX_SCORE, COUNT, ZERO)
+                                 EMAIL_LENGTH, ROLE_LENGTH,
+                                 MIN_SCORE, MAX_SCORE, COUNT)
 
 
 class CategoryAndGenre(models.Model):
@@ -156,7 +156,6 @@ class User(AbstractBaseUser):
         return self.username
 
 
-
 class BaseAuthorModel(models.Model):
     """
     Абстрактная модель.
@@ -212,7 +211,6 @@ class Review(BaseAuthorModel):
 
     def __str__(self):
         return self.text[:COUNT]
-
 
 
 class Comment(BaseAuthorModel):

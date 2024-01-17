@@ -8,7 +8,6 @@ from rest_framework.serializers import (
     CharField,
     EmailField,
 )
-import re
 
 
 class BaseUserSerializer(serializers.ModelSerializer):

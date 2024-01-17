@@ -3,16 +3,14 @@ from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django.conf import settings
-# from django.core.exceptions import ValidationError
 from rest_framework.exceptions import ValidationError
 from django_filters.rest_framework import DjangoFilterBackend
-
 from rest_framework import viewsets, mixins, filters, status
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import permissions, serializers
+from rest_framework import permissions
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Review, Title, Category, Genre, User
