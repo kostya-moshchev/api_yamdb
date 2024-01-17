@@ -117,15 +117,31 @@ class User(AbstractBaseUser):
         default="user"
     )
 
+    ROLE_USER = 'user'
+    ROLE_MODERATOR = 'moderator'
+    ROLE_ADMIN = 'admin'
+
+    @property
+    def is_admin(self):
+        return self.role == self.ROLE_ADMIN
+
+    @property
+    def is_moderator(self):
+        return self.role == self.ROLE_MODERATOR
+
+    @property
+    def is_user(self):
+        return self.role == self.ROLE_USER
+
     objects = UserManager()
 
     USERNAME_FIELD = 'username'
 
-    def __str__(self):
-        return self.username
-
     class Meta:
         ordering = ("username",)
+
+    def __str__(self):
+        return self.username
 
 
 class BaseAuthorModel(models.Model):
