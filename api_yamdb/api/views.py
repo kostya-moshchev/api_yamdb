@@ -49,7 +49,7 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = UserPatchSerializer(user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data)       
+        return Response(serializer.data)
 
 
 class AuthViewSet(APIView):
