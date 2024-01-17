@@ -87,7 +87,7 @@ class User(AbstractUser):
         ],
         default="user"
     )
-    is_superuser = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False, verbose_name='admin')
 
     ROLE_USER = 'user'
     ROLE_MODERATOR = 'moderator'
