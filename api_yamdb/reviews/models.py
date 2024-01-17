@@ -2,31 +2,38 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models import UniqueConstraint
+from django.utils import timezone
+
+from api_yamdb.constants import (NAME_LENGTH, SLUG_LENGTH, LENGHT_FOR_USER,
+                                 EMAIL_LENGTH, ROLE_LENGTH, CODE_LENGTH,
+                                 MIN_SCORE, MAX_SCORE, COUNT, ZERO)
 
 
-class Category(models.Model):
-    """Категории"""
-    name = models.CharField(max_length=256)
-    slug = models.SlugField(max_length=50, unique=True)
+class CategoryAndGenre(models.Model):
+    name = models.CharField(max_length=NAME_LENGTH)
+    slug = models.SlugField(max_length=SLUG_LENGTH, unique=True)
 
     def __str__(self):
         return self.name
 
     class Meta:
+        abstract = True
+        ordering = ("name",)
+
+
+class Category(CategoryAndGenre):
+    """Категории"""
+
+    class Meta(CategoryAndGenre.Meta):
         verbose_name = "Категория"
         verbose_name_plural = "Категории"
         default_related_name = "categories"
 
 
-class Genre(models.Model):
+class Genre(CategoryAndGenre):
     """Жанры"""
-    name = models.CharField(max_length=256)
-    slug = models.SlugField(max_length=50, unique=True)
 
-    def __str__(self):
-        return self.name
-
-    class Meta:
+    class Meta(CategoryAndGenre.Meta):
         verbose_name = "Жанр"
         verbose_name_plural = "Жанры"
         default_related_name = "genres"
@@ -37,7 +44,7 @@ class Title(models.Model):
 
     name = models.CharField(
         verbose_name="Название",
-        max_length=256,
+        max_length=NAME_LENGTH,
         db_index=True,
     )
     year = models.PositiveSmallIntegerField(
@@ -63,6 +70,11 @@ class Title(models.Model):
         ordering = ("name",)
         verbose_name = "Произведение"
         verbose_name_plural = "Произведения"
+
+    def clean(self):
+        if self.year > timezone.now().year:
+            raise
+        ValidationError("Указанный год не может быть больше текущего")
 
     def __str__(self):
         return self.name
@@ -102,13 +114,13 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser):
-    username = models.CharField(max_length=150, unique=True)
-    email = models.EmailField(max_length=254, unique=True)
-    first_name = models.CharField(max_length=150, blank=True)
-    last_name = models.CharField(max_length=150, blank=True)
+    username = models.CharField(max_length=LENGHT_FOR_USER, unique=True)
+    email = models.EmailField(max_length=EMAIL_LENGTH, unique=True)
+    first_name = models.CharField(max_length=LENGHT_FOR_USER, blank=True)
+    last_name = models.CharField(max_length=LENGHT_FOR_USER, blank=True)
     bio = models.TextField(blank=True)
     role = models.CharField(
-        max_length=10,
+        max_length=ROLE_LENGTH,
         choices=[
             ("user", "User"),
             ("moderator", "Moderator"),
@@ -142,6 +154,7 @@ class User(AbstractBaseUser):
 
     def __str__(self):
         return self.username
+
 
 
 class BaseAuthorModel(models.Model):
@@ -179,12 +192,15 @@ class Review(BaseAuthorModel):
     )
     score = models.PositiveSmallIntegerField(
         validators=[
-            MinValueValidator(1, message="Нельзя поствить оценку ниже 1."),
-            MaxValueValidator(10, message="Нельзя поставить оценку выше 10."),
+            MinValueValidator(MIN_SCORE,
+                              message="Нельзя поствить оценку ниже 1."),
+            MaxValueValidator(MAX_SCORE,
+                              message="Нельзя поставить оценку выше 10."),
         ]
     )
 
     class Meta(BaseAuthorModel.Meta):
+
         verbose_name = "Отзыв"
         verbose_name_plural = "Отзывы"
         constraints = [
@@ -195,7 +211,8 @@ class Review(BaseAuthorModel):
         ]
 
     def __str__(self):
-        return self.text[:20]
+        return self.text[:COUNT]
+
 
 
 class Comment(BaseAuthorModel):
@@ -218,4 +235,4 @@ class Comment(BaseAuthorModel):
         verbose_name_plural = "Комментарии"
 
     def __str__(self):
-        return self.text[:20]
+        return self.text[:COUNT]

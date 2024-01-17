@@ -102,28 +102,27 @@ class CreateListDestroyViewSet(mixins.CreateModelMixin,
     pass
 
 
-class CategoryViewSet(CreateListDestroyViewSet):
+class BasicViewSet(CreateListDestroyViewSet):
+    permission_classes = [IsAdminOrReadOnly, ]
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+    pagination_class = PagePagination
+
+
+class CategoryViewSet(BasicViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAdminOrReadOnly, ]
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
-    pagination_class = PagePagination
 
 
-class GenreViewSet(CreateListDestroyViewSet):
+class GenreViewSet(BasicViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = [IsAdminOrReadOnly, ]
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
-    pagination_class = PagePagination
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.annotate(Avg('reviews__score'))
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score')).order_by('name')
     permission_classes = [IsAdminOrReadOnly, ]
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -134,9 +133,6 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.request.method in SAFE_METHODS:
             return TitleReadSerializer
         return TitleSerializer
-
-    def get_queryset(self):
-        return Title.objects.annotate(rating=Avg("reviews__score"))
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
