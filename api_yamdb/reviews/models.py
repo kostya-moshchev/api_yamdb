@@ -77,6 +77,7 @@ class GenreTitle(models.Model):
 
 
 class User(AbstractUser):
+    email = models.EmailField(unique=True)
     bio = models.TextField(blank=True)
     role = models.CharField(
         max_length=10,
