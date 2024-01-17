@@ -1,9 +1,9 @@
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models import UniqueConstraint
 from django.utils import timezone
-from rest_framework.exceptions import ValidationError
+from django.core.exceptions import ValidationError
 from api_yamdb.constants import (NAME_LENGTH, SLUG_LENGTH, LENGHT_FOR_USER,
                                  EMAIL_LENGTH, ROLE_LENGTH,
                                  MIN_SCORE, MAX_SCORE, COUNT)
@@ -88,32 +88,7 @@ class GenreTitle(models.Model):
         return f"{self.genre} {self.title}"
 
 
-class UserManager(BaseUserManager):
-
-    def create_user(self, email, username,
-                    role, password=None, **extra_fields):
-        user = self.model(
-            email=self.normalize_email(email),
-            username=username, role=role,
-            **extra_fields
-        )
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
-
-    def create_superuser(
-            self, email, username, role, password=None, **extra_fields):
-        user = self.create_user(
-            email=email,
-            username=username,
-            role='admin',
-            **extra_fields,
-        )
-        user.save(using=self._db)
-        return user
-
-
-class User(AbstractBaseUser):
+class User(AbstractUser):
     username = models.CharField(max_length=LENGHT_FOR_USER, unique=True)
     email = models.EmailField(max_length=EMAIL_LENGTH, unique=True)
     first_name = models.CharField(max_length=LENGHT_FOR_USER, blank=True)
@@ -128,6 +103,7 @@ class User(AbstractBaseUser):
         ],
         default="user"
     )
+    is_superuser = models.BooleanField(default=False, verbose_name='admin')
 
     ROLE_USER = 'user'
     ROLE_MODERATOR = 'moderator'
@@ -144,10 +120,6 @@ class User(AbstractBaseUser):
     @property
     def is_user(self):
         return self.role == self.ROLE_USER
-
-    objects = UserManager()
-
-    USERNAME_FIELD = 'username'
 
     class Meta:
         ordering = ("username",)

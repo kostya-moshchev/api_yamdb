@@ -25,10 +25,10 @@ class IsAdmin(permissions.BasePermission):
         if not request.user.is_authenticated:
             return False
             # Проверяем, является ли пользователь администратором
-        return request.user.is_admin
+        return request.user.is_admin or request.user.is_superuser
 
     def has_object_permission(self, request, view, obj):
-        return request.user.is_admin
+        return request.user.is_admin or request.user.is_superuser
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
