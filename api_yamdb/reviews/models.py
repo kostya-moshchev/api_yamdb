@@ -1,9 +1,6 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-from django.core.exceptions import ValidationError
-from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver
 from django.db.models import UniqueConstraint
 from django.utils import timezone
 
@@ -132,20 +129,32 @@ class User(AbstractBaseUser):
         default="user"
     )
 
+    ROLE_USER = 'user'
+    ROLE_MODERATOR = 'moderator'
+    ROLE_ADMIN = 'admin'
+
+    @property
+    def is_admin(self):
+        return self.role == self.ROLE_ADMIN
+
+    @property
+    def is_moderator(self):
+        return self.role == self.ROLE_MODERATOR
+
+    @property
+    def is_user(self):
+        return self.role == self.ROLE_USER
+
     objects = UserManager()
 
     USERNAME_FIELD = 'username'
 
-    def __str__(self):
-        return self.username
-
     class Meta:
         ordering = ("username",)
 
+    def __str__(self):
+        return self.username
 
-class ActivationCode(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    code = models.CharField(max_length=CODE_LENGTH)
 
 
 class BaseAuthorModel(models.Model):
@@ -181,7 +190,7 @@ class Review(BaseAuthorModel):
         on_delete=models.CASCADE,
         related_name='reviews'
     )
-    score = models.IntegerField(
+    score = models.PositiveSmallIntegerField(
         validators=[
             MinValueValidator(MIN_SCORE,
                               message="Нельзя поствить оценку ниже 1."),
@@ -190,10 +199,8 @@ class Review(BaseAuthorModel):
         ]
     )
 
-    def __str__(self):
-        return self.text[:COUNT]
+    class Meta(BaseAuthorModel.Meta):
 
-    class Meta:
         verbose_name = "Отзыв"
         verbose_name_plural = "Отзывы"
         constraints = [
@@ -203,20 +210,9 @@ class Review(BaseAuthorModel):
             )
         ]
 
+    def __str__(self):
+        return self.text[:COUNT]
 
-@receiver(post_save, sender=Review)
-@receiver(post_delete, sender=Review)
-def update_title_rating(instance, **kwargs):
-    title = instance.title
-    reviews = title.reviews.all()
-    total_score = sum(review.score for review in reviews)
-    num_reviews = len(reviews)
-    if num_reviews > ZERO:
-        title.rating = round(total_score / num_reviews)
-    else:
-        title.rating = None
-
-    title.save()
 
 
 class Comment(BaseAuthorModel):
@@ -234,9 +230,9 @@ class Comment(BaseAuthorModel):
         related_name='comments'
     )
 
-    def __str__(self):
-        return self.text[:COUNT]
-
-    class Meta:
+    class Meta(BaseAuthorModel.Meta):
         verbose_name = "Комментарий"
         verbose_name_plural = "Комментарии"
+
+    def __str__(self):
+        return self.text[:COUNT]
