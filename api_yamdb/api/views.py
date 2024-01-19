@@ -88,9 +88,9 @@ class TokenView(APIView):
                 'Вы ошиблись в поле toden или username',
                 status=status.HTTP_400_BAD_REQUEST
             )
-        access = AccessToken.for_user(user)
+        some_token = AccessToken.for_user(user)
         token = {
-            'access': str(access),
+            'token': str(some_token),
         }
         return Response(token, status=status.HTTP_200_OK)
 
