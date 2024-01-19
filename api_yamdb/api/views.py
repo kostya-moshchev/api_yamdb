@@ -167,11 +167,12 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_review(self):
         review_id = self.kwargs['review_id']
-        return get_object_or_404(Review, id=review_id)
+        return get_object_or_404(
+            Review, id=review_id,
+            title=self.kwargs['title_id']
+        )
 
     def get_queryset(self):
-        if self.get_review().title != self.get_title():
-            raise ValidationError('Ошибка в urls')
         return self.get_review().comments.all()
 
     def perform_create(self, serializer):
