@@ -1,3 +1,4 @@
+import re
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from reviews.models import Category, Genre, Title
@@ -7,7 +8,6 @@ from rest_framework.serializers import (
     CharField,
     EmailField,
 )
-import re
 
 
 class BaseUserSerializer(serializers.ModelSerializer):
@@ -86,17 +86,21 @@ class TokenSerializer(serializers.Serializer):
     confirmation_code = CharField(required=True)
 
 
-class CategorySerializer(serializers.ModelSerializer):
+class BasicSerializer(serializers.ModelSerializer):
 
     class Meta:
         exclude = ('id',)
+
+
+class CategorySerializer(BasicSerializer):
+
+    class Meta(BasicSerializer.Meta):
         model = Category
 
 
-class GenreSerializer(serializers.ModelSerializer):
+class GenreSerializer(BasicSerializer):
 
-    class Meta:
-        exclude = ('id',)
+    class Meta(BasicSerializer.Meta):
         model = Genre
 
 
@@ -121,6 +125,10 @@ class TitleSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Title
+
+    def to_representation(self, instance):
+        serializer = TitleReadSerializer(instance)
+        return serializer.data
 
 
 class ReviewSerializer(serializers.ModelSerializer):
