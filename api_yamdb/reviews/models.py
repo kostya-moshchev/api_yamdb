@@ -1,9 +1,8 @@
+from django.utils import timezone
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models import UniqueConstraint
-from django.utils import timezone
-from django.core.exceptions import ValidationError
 from api_yamdb.constants import (NAME_LENGTH, SLUG_LENGTH, LENGHT_FOR_USER,
                                  EMAIL_LENGTH, ROLE_LENGTH,
                                  MIN_SCORE, MAX_SCORE, COUNT)
@@ -50,7 +49,9 @@ class Title(models.Model):
     year = models.PositiveSmallIntegerField(
         verbose_name="Год создания",
         db_index=True,
-    )
+        validators=[MaxValueValidator(timezone.now().year)],
+        error_messages={
+            "max_value": "Указанный год не может быть больше текущего"})
     description = models.TextField(
         verbose_name="Описание",
         blank=True,
@@ -70,11 +71,6 @@ class Title(models.Model):
         ordering = ("name",)
         verbose_name = "Произведение"
         verbose_name_plural = "Произведения"
-
-    def clean(self):
-        if self.year > timezone.now().year:
-            raise
-        ValidationError("Указанный год не может быть больше текущего")
 
     def __str__(self):
         return self.name
